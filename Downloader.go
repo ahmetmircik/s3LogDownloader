@@ -46,6 +46,7 @@ func main() {
 	err := os.MkdirAll(localDownloadDirectory, perm)
 
 	// download remote file to local file
+	fmt.Println("Download started...")
 start:
 	fromRemoteFilePath := filepath.Join(prBuilderRepo, strconv.Itoa(prBuilderJobNumber), prBuilderRepo+"-"+compressedFileName)
 	toLocalFilePath := filepath.Join(localDownloadDirectory, compressedFileName)
@@ -55,6 +56,9 @@ start:
 		if aerr.Code() == s3.ErrCodeNoSuchKey && strings.Contains(compressedFileName, ".tar") {
 			compressedFileName = strconv.Itoa(prBuilderJobNumber) + ".zip"
 			goto start
+		} else if aerr.Code() == s3.ErrCodeNoSuchKey{
+			fmt.Println("No file found to download")
+			os.Exit(-1)
 		} else {
 			exit(err)
 		}
@@ -153,7 +157,6 @@ func download(fromRemoteFilePath string, toLocalFilePath string) error {
 	file, err := os.Create(toLocalFilePath)
 
 	downloader := s3manager.NewDownloader(sess)
-	fmt.Println("Download started...")
 	_, err = downloader.Download(file, &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(fromRemoteFilePath),
