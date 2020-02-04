@@ -9,10 +9,11 @@ import (
 	"strings"
 )
 
-func doUnzip(src, dest string) error {
+func unzip(src, dest string) error {
 	dest = filepath.Clean(dest) + string(os.PathSeparator)
 
-	r, err := zip.OpenReader(src)
+	finalPath := filepath.Join(dest, src)
+	r, err := zip.OpenReader(finalPath)
 	if err != nil {
 		return err
 	}
