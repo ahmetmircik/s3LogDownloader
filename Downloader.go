@@ -46,7 +46,7 @@ func main() {
 	err := os.MkdirAll(localDownloadDirectory, perm)
 
 	// download remote file to local file
-	fmt.Println("Download started...")
+	fmt.Print("Download started...")
 start:
 	fromRemoteFilePath := filepath.Join(prBuilderRepo, strconv.Itoa(prBuilderJobNumber), prBuilderRepo+"-"+compressedFileName)
 	toLocalFilePath := filepath.Join(localDownloadDirectory, compressedFileName)
@@ -56,8 +56,8 @@ start:
 		if aerr.Code() == s3.ErrCodeNoSuchKey && strings.Contains(compressedFileName, ".tar") {
 			compressedFileName = strconv.Itoa(prBuilderJobNumber) + ".zip"
 			goto start
-		} else if aerr.Code() == s3.ErrCodeNoSuchKey{
-			fmt.Println("No file found to download")
+		} else if aerr.Code() == s3.ErrCodeNoSuchKey {
+			fmt.Println("\rNo file found to download")
 			os.Exit(-1)
 		} else {
 			exit(err)
@@ -72,15 +72,8 @@ start:
 		unzip(compressedFileName, localDownloadDirectory)
 	}
 
-	err = os.Remove(filepath.Join(localDownloadDirectory, strconv.Itoa(prBuilderJobNumber)+".tar"))
-	if err != nil {
-		exit(err)
-	}
-
-	err = os.Remove(filepath.Join(localDownloadDirectory, strconv.Itoa(prBuilderJobNumber)+".zip"))
-	if err != nil {
-		exit(err)
-	}
+	os.Remove(filepath.Join(localDownloadDirectory, strconv.Itoa(prBuilderJobNumber)+".tar"))
+	os.Remove(filepath.Join(localDownloadDirectory, strconv.Itoa(prBuilderJobNumber)+".zip"))
 
 	fmt.Println("Done. Uncompressed file is here --> " + localDownloadDirectory)
 }
@@ -120,7 +113,7 @@ func untar(tarFileName string, localDownloadDirectory string) {
 		switch header.Typeflag {
 		case tar.TypeDir:
 			// handle directory
-			err = os.MkdirAll(filename, 0755) // or use 0755 if you prefer
+			err = os.MkdirAll(filename, perm) // or use 0755 if you prefer
 			if err != nil {
 				exit(err)
 			}
@@ -134,7 +127,7 @@ func untar(tarFileName string, localDownloadDirectory string) {
 
 			io.Copy(writer, tarBallReader)
 
-			err = os.Chmod(filename, os.FileMode(header.Mode))
+			err = os.Chmod(filename, perm)
 
 			if err != nil {
 				exit(err)
